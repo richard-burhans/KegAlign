@@ -1,0 +1,7 @@
+%% TBB Flow Graph Topology in main.cpp
+flowchart LR
+    A["reader\n(source_node)\nEmits seeder_payloads"] --> B["gatekeeper\n(join_node)\nGates on ticket token"]
+    T["ticketer\n(buffer_node)\nHolds N tickets\n(N = num_threads)"] --> B
+    B --> C["seeder\n(function_node)\nGPU Seed+Filter\nX-drop extension"]
+    C --> D["printer\n(multifunction_node)\nOutputs LASTZ commands\nReturns ticket token"]
+    D -->|"output_port<0>\nReturn ticket"| T

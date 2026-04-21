@@ -1,0 +1,31 @@
+%% KegAlign System Architecture
+graph TD
+    subgraph INPUT["Input Stage"]
+        A[FASTA Reference .gz] --> B[faToTwoBit]
+        C[FASTA Query .gz] --> B
+        B --> D[.2bit files]
+    end
+
+    subgraph KEGALIGN["KegAlign Binary (C++/CUDA)"]
+        D --> E[main.cpp\nFASTA → DRAM Buffers]
+        E --> F[seed_pos_table.cu\nBuild Seed Index]
+        F --> G[TBB Flow Graph\ngraph.h]
+        G --> H[seeder.cpp\nK-mer Generation]
+        H --> I[seed_filter.cu\nGPU Seed Matching\n& X-drop Extension]
+        I --> J[segment_printer.cpp\nGenerate LASTZ Commands]
+    end
+
+    subgraph POSTPROCESS["Post-Processing (Python)"]
+        J --> K[diagonal_partition.py\nDiagonal Sort & Chunk HSPs]
+        K --> L[LASTZ Binary\nGapped Alignment]
+        L --> M[Output Files\nMAF/AXT/SAM/PAF]
+    end
+
+    subgraph ORCHESTRATION["Orchestration Layer"]
+        N[runner.py\nGalaxy Workflow] --> KEGALIGN
+        N --> POSTPROCESS
+        O[run_mig.py\nMPS/MIG Scheduling] --> KEGALIGN
+        P[split_input.py\nGenome Partitioning] --> INPUT
+        Q[run_lastz_tarball.py\nTarball Execution] --> L
+        R[package_output.py\nResult Packaging] --> M
+    end

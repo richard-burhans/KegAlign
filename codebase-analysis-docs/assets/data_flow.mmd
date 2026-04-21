@@ -1,0 +1,31 @@
+%% KegAlign Data Flow
+sequenceDiagram
+    participant User
+    participant main.cpp
+    participant DRAM
+    participant SeedPosTable as seed_pos_table.cu
+    participant GPU as seed_filter.cu (GPU)
+    participant Printer as segment_printer.cpp
+    participant LASTZ
+
+    User->>main.cpp: kegalign ref.fa.gz query.fa.gz out/
+    main.cpp->>DRAM: Allocate 6GB buffers (ref, query, query_rc)
+    main.cpp->>DRAM: Read FASTA → binary (kseq.h)
+    main.cpp->>DRAM: Generate reverse complement
+    main.cpp->>SeedPosTable: GenerateSeedPosTable(ref)
+    SeedPosTable-->>GPU: SendSeedPosTable (all GPUs)
+    main.cpp->>GPU: SendRefWriteRequest (all GPUs)
+
+    loop For each ref block × query interval
+        main.cpp->>GPU: SendQueryWriteRequest
+        main.cpp->>GPU: SeedAndFilter(seed_offsets, rev=false)
+        GPU-->>main.cpp: vector<segmentPair> fwd_hsps
+        main.cpp->>GPU: SeedAndFilter(seed_offsets, rev=true)
+        GPU-->>main.cpp: vector<segmentPair> rc_hsps
+        main.cpp->>Printer: printer_payload{block, interval, fwd_hsps, rc_hsps}
+        Printer->>Printer: Write .seg files + LASTZ cmd
+        Printer-->>User: Print LASTZ command to stdout
+    end
+
+    User->>LASTZ: Run LASTZ commands (parallel)
+    LASTZ-->>User: MAF/SAM/AXT/PAF output

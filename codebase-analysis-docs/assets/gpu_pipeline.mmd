@@ -1,0 +1,13 @@
+%% GPU Pipeline in seed_filter.cu
+flowchart TD
+    A["Host: seed_offsets vector\n(kmer_index << 32 | query_pos)"]
+    A --> B["compress_string_rev_comp kernel\nACGT → 2-bit encoding\nGenerate reverse complement"]
+    B --> C["find_num_hits kernel\nCount hits per seed\nvia d_index_table lookup"]
+    C --> D["thrust::inclusive_scan\nPrefix sum → hit offsets"]
+    D --> E["find_hits kernel\nGenerate HSP candidates\nfrom seed × position pairs"]
+    E --> F["find_hsps kernel\nX-drop ungapped extension\nWarp-level parallelism\n(NUM_WARPS warps/block)"]
+    F --> G["compress_output kernel\nFilter low-score HSPs\nCompact results"]
+    G --> H["thrust::sort\nSort by diagonal"]
+    H --> I["thrust::unique_copy\nDeduplicate HSPs"]
+    I --> J["Copy to host\nvector<segmentPair>"]
+    J --> K["Return to seeder.cpp\n→ segment_printer.cpp"]
