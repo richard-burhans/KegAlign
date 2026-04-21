@@ -80,33 +80,33 @@ FASTA → .2bit    →    Seed+Filter+XDrop        →   Gapped extension → MA
 ### Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        KegAlign System                                       │
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                        KegAlign System                                        │
 │                                                                               │
-│  ┌──────────────┐   ┌────────────────────────────────────────────────────┐   │
-│  │  Orchestration│   │              KegAlign Binary (C++/CUDA)           │   │
-│  │  Layer        │   │                                                    │   │
-│  │               │   │  main.cpp ──► DRAM (6GB×3 buffers)               │   │
-│  │  runner.py    │──►│     │                                              │   │
-│  │  run_mig.py   │   │     ├──► seed_pos_table.cu                        │   │
-│  │  split_in.py  │   │     │    (Build kmer index → GPU)                 │   │
-│  │               │   │     │                                              │   │
-│  │               │   │     └──► TBB Flow Graph (graph.h)                 │   │
-│  │               │   │          │                                         │   │
-│  │               │   │          ├── seeder.cpp (k-mer extraction)         │   │
-│  │               │   │          ├── seed_filter.cu (GPU kernels)          │   │
-│  │               │   │          └── segment_printer.cpp (LASTZ cmds)      │   │
-│  └──────────────┘   └────────────────────────────────────────────────────┘   │
-│                                      │                                         │
-│                                      ▼ LASTZ commands (stdout)                 │
-│  ┌─────────────────────────────────────────────────────────────────────────┐   │
-│  │  Post-Processing Layer (Python)                                          │   │
-│  │                                                                          │   │
-│  │  diagonal_partition.py ──► LASTZ binary ──► MAF/SAM/AXT/PAF output     │   │
-│  │  package_output.py     ──► Tarball for Galaxy                           │   │
-│  │  run_lastz_tarball.py  ──► Execute from tarball                         │   │
-│  └─────────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────────┘
+│  ┌────────────────┐   ┌────────────────────────────────────────────────────┐  │
+│  │  Orchestration │   │              KegAlign Binary (C++/CUDA)            │  │
+│  │  Layer         │   │                                                    │  │
+│  │                │   │  main.cpp ──► DRAM (6GB×3 buffers)                 │  │
+│  │  runner.py     │──►│     │                                              │  │
+│  │  run_mig.py    │   │     ├──► seed_pos_table.cu                         │  │
+│  │  split_in.py   │   │     │    (Build kmer index → GPU)                  │  │
+│  │                │   │     │                                              │  │
+│  │                │   │     └──► TBB Flow Graph (graph.h)                  │  │
+│  │                │   │          │                                         │  │
+│  │                │   │          ├── seeder.cpp (k-mer extraction)         │  │
+│  │                │   │          ├── seed_filter.cu (GPU kernels)          │  │
+│  │                │   │          └── segment_printer.cpp (LASTZ cmds)      │  │
+│  └────────────────┘   └────────────────────────────────────────────────────┘  │
+│                                      │                                        │
+│                                      ▼ LASTZ commands (stdout)                │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │  Post-Processing Layer (Python)                                         │  │
+│  │                                                                         │  │
+│  │  diagonal_partition.py ──► LASTZ binary ──► MAF/SAM/AXT/PAF output      │  │
+│  │  package_output.py     ──► Tarball for Galaxy                           │  │
+│  │  run_lastz_tarball.py  ──► Execute from tarball                         │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 See also: [`assets/architecture.mmd`](assets/architecture.mmd) (Mermaid source)
@@ -819,36 +819,36 @@ class PackageFile:
 
 ```
                     ┌──────────────────────────────────────────┐
-                    │          Feature Interactions             │
+                    │          Feature Interactions            │
                     └──────────────────────────────────────────┘
 
 split_input.py ──────────────────────────────────────────────► run_mig.py
 (partition genomes)                                            (schedule tasks)
                                                                      │
-                                                            ┌────────▼────────────────────┐
-                                                            │  kegalign binary              │
-                                                            │  (one instance per GPU task)  │
-                                                            └──────────┬──────────────────┘
+                                                            ┌────────▼─────────────────────┐
+                                                            │  kegalign binary             │
+                                                            │  (one instance per GPU task) │
+                                                            └──────────┬───────────────────┘
                                                                        │ stdout: LASTZ cmds
-                                                       ┌───────────────▼───────────────┐
-runner.py ──────────────────────────────────────────► │  diagonal_partition.py         │
-(orchestrate, Galaxy API)                              │  (optimize HSP ordering)       │
-                                                       └───────────────┬───────────────┘
+                                                       ┌───────────────▼──────────────┐
+runner.py ───────────────────────────────────────────► │  diagonal_partition.py       │
+(orchestrate, Galaxy API)                              │  (optimize HSP ordering)     │
+                                                       └───────────────┬──────────────┘
                                                                        │
                                           ┌────────────────────────────▼──────────────┐
-                                          │  LASTZ binary                              │
-                                          │  (gapped alignment on segments)            │
+                                          │  LASTZ binary                             │
+                                          │  (gapped alignment on segments)           │
                                           └────────────────────────────┬──────────────┘
                                                                         │ .maf- output
-                                    ┌───────────────────────────────────▼──────────────┐
-                                    │  package_output.py / run_lastz_tarball.py         │
-                                    │  (tarball for Galaxy / direct execution)          │
+                                    ┌───────────────────────────────────▼─────────────┐
+                                    │  package_output.py / run_lastz_tarball.py       │
+                                    │  (tarball for Galaxy / direct execution)        │
                                     └─────────────────────────────────────────────────┘
 
 Internal to kegalign binary:
 
 main.cpp ──► seed_pos_table.cu ──► (index uploaded to GPUs) ──┐
-    │                                                          │
+    │                                                         │
     └──► TBB Flow Graph ──► seeder.cpp ──► seed_filter.cu ────┘
                                     (uses GPU index to find hits)
                                                │
