@@ -65,8 +65,8 @@ KegAlign is a **modified fork of SegAlign** (Goenka et al. 2020), developed by t
 ### Three-Stage Pipeline (High Level)
 
 ```
-[Input Preparation]    [KegAlign - GPU Seeding]    [LASTZ - Gapped Alignment]
-FASTA → .2bit       →  Seed+Filter+XDrop        →  Gapped extension → MAF/SAM/AXT
+[Input Preparation] → [KegAlign - GPU Seeding] → [LASTZ - Gapped Alignment]
+FASTA → .2bit         Seed+Filter+XDrop          Gapped extension → MAF/SAM/AXT
 ```
 
 1. **Input Preparation:** Convert FASTA to UCSC `.2bit` binary format for random-access reading
