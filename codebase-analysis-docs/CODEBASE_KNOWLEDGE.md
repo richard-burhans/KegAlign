@@ -61,39 +61,39 @@ MIT License. Original copyright (2020) by Goenka, Turakhia, Paten, Horowitz. For
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Python/Bash Pipeline                       │
-│  runner.py / run_kegalign / run_lastz_tarball.py             │
-│  diagonal_partition.py / package_output.py                   │
+│                    Python/Bash Pipeline                     │
+│  runner.py / run_kegalign / run_lastz_tarball.py            │
+│  diagonal_partition.py / package_output.py                  │
 │  mps-mig/run_mig.py / split_input.py                        │
 ├─────────────────────────────────────────────────────────────┤
-│                     KegAlign C++ Binary                      │
-│  ┌──────────┐   ┌──────────┐   ┌────────────────┐          │
-│  │  main.cpp │──>│ TBB Flow │──>│ segment_printer│──> stdout │
-│  │  (I/O +   │   │  Graph   │   │  (LASTZ cmds)  │          │
-│  │  config)  │   │          │   └────────────────┘          │
-│  └──────────┘   │  source   │                               │
-│                  │  node     │   ┌──────────────┐           │
-│                  │     │     │   │  seeder.cpp  │           │
-│                  │     ▼     │   │  (k-mer +    │           │
-│                  │  gatekeeper──>│   GPU call)  │           │
-│                  │  (join)   │   └──────┬───────┘           │
-│                  └──────────┘          │                    │
+│                     KegAlign C++ Binary                     │
+│  ┌──────────┐   ┌───────────┐   ┌────────────────┐          │
+│  │ main.cpp │──>│ TBB Flow  │──>│ segment_printer│──> stdout│
+│  │ (I/O +   │   │  Graph    │   │  (LASTZ cmds)  │          │
+│  │ config)  │   │           │   └────────────────┘          │
+│  └──────────┘   │ source    │                               │
+│                 │ node      │   ┌──────────────┐            │
+│                 │    │      │   │  seeder.cpp  │            │
+│                 │    ▼      │   │  (k-mer +    │            │
+│                 │ gatekeeper│──>│   GPU call)  │            │
+│                 │ (join)    │   └──────┬───────┘            │
+│                 └───────────┘          │                    │
 │                                        ▼                    │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │               CUDA GPU Layer                         │    │
-│  │  seed_filter.cu     seed_filter_interface.cu         │    │
-│  │  seed_pos_table.cu                                   │    │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────┐  │    │
-│  │  │ find_num_hits│  │  find_hits   │  │ find_hsps│  │    │
-│  │  │  (kernel)    │  │  (kernel)    │  │ (kernel) │  │    │
-│  │  └──────────────┘  └──────────────┘  └──────────┘  │    │
-│  │  ┌────────────────────┐  ┌────────────────────┐    │    │
-│  │  │compress_string     │  │compress_string_    │    │    │
-│  │  │  (kernel)          │  │  rev_comp (kernel) │    │    │
-│  │  └────────────────────┘  └────────────────────┘    │    │
+│  │               CUDA GPU Layer                        │    │
+│  │  seed_filter.cu     seed_filter_interface.cu        │    │
+│  │  seed_pos_table.cu                                  │    │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────┐   │    │
+│  │  │ find_num_hits│  │  find_hits   │  │ find_hsps│   │    │
+│  │  │  (kernel)    │  │  (kernel)    │  │ (kernel) │   │    │
+│  │  └──────────────┘  └──────────────┘  └──────────┘   │    │
+│  │  ┌────────────────────┐  ┌────────────────────┐     │    │
+│  │  │compress_string     │  │compress_string_    │     │    │
+│  │  │  (kernel)          │  │  rev_comp (kernel) │     │    │
+│  │  └────────────────────┘  └────────────────────┘     │    │
 │  └─────────────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────────────┤
-│                    Common / Shared                            │
+│                    Common / Shared                          │
 │  DRAM.cpp/h  ntcoding.cpp/h  scoring.c/h  dna_utilities.c/h │
 │  utilities.c/h  parameters.h  cuda_utils.h  kseq.h          │
 └─────────────────────────────────────────────────────────────┘
